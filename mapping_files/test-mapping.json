@@ -1,0 +1,6 @@
+{
+    "patient": {
+        "normal": "identifier",
+        "export": "patient_id"
+    },
+}
