@@ -1,0 +1,256 @@
+ITG Wrangling Notes
+
+Deliverables (allergies 2 - 5 features)
+
+	Mapping File A (import to normal) json
+	Mapping File B (normal to export) json
+	Visualization of Mapping File A (networknx.py)
+	Visualization of Mapping File B (networknx.py)
+
+Data Sources and Schemas:
+
+	Import Data Source = .db (T-SQL?) / Centricity and FHIR API
+	Mapping File Centricity = .json / Centricity to FHIR
+	Import Data Schema = .db Centricity
+	Mapping F = .xml + .json / FHIR Standards
+	Normalized Data Source = .db (T-SQL) / ITG
+	Export Data Source = .csv / Able Health
+
+Export Notes:
+	CVX code = vaccination codes by CDC
+	RXNORM code = drug and brand name code by NIH
+	medication and immunization allergies by PID
+
+Thoughts:
+
+	need tool to show and create relationship between similar attributes in GUI for analysts (talend?)
+	tool needs to manipulate .dbo, .csv head, .xml and .json
+	tool needs to export relationship as .xml or .json
+
+
+//Client Message:
+
+Normal:
+We started with FHIR as our normal and will build it out from there when additional data is needed outside of the FHIR standard.
+This can be found here: https://www.hl7.org/fhir/
+Using Allergies as an example, our table looks like this:
+CREATE TABLE [dbo].[Allergies](
+[identifier] [numeric](19, 0) NOT NULL,
+[clinicalStatus] [varchar](max) NULL,
+[verificationStatus] [varchar](max) NULL,
+[type] [varchar](max) NULL,
+[category] [varchar](max) NULL,
+[criticality] [varchar](max) NULL,
+[code] [varchar](max) NULL,
+[patient] [varchar](max) NULL,
+[encounter] [varchar](max) NULL,
+[onsetDateTime] [varchar](max) NULL,
+[onsetAge] [varchar](max) NULL,
+[onsetPeriod] [varchar](max) NULL,
+[onsetRange] [varchar](max) NULL,
+[onsetString] [varchar](max) NULL,
+[recordedDate] [varchar](max) NULL,
+[recorder] [varchar](max) NULL,
+[asserter] [varchar](max) NULL,
+[lastOccurrence] [varchar](max) NULL,
+[note] [varchar](max) NULL,
+[reaction] [varchar](max) NULL,
+CONSTRAINT [PK_ALLERGIES] PRIMARY KEY CLUSTERED
+(
+[identifier] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+
+GO
+
+
+Export Source:
+Exports may need the data in their own simplified format.
+Able Health’s requirements are attached. You can see they want allergies in a CSV format with very limited info.
+
+They have mapped some of their tables to the FHIR API already that you can use as an example too: https://mydata.gehealthcare.com/fhirapidoc
+An excerpt from their Allergies mapping:
+
+AllergyIntolerance
+
+AllergyIntolerance-Profile
+
+FHIR_ALLERGYVIEW
+
+├ id
+
+MakeId(“ALLERGY”,%ALLERGYGROUPID%)
+
+├ extension
+
+encounter
+
+├ extension
+
+approxonset
+
+├ extension
+
+enddate
+
+├ identifier
+
+External Allergy Identifier
+
+MakeIdentifier(“U”,getSiteSystem(“AllergyId”),%EXTALLERGYID%)
+
+├ onset
+
+%ONSETDATE%
+
+├ recordedDate
+
+%DB_CREATE_DATE%
+
+├ recorder
+
+MakeReference(“USR”,%USRID%,”Practitioner”)
+
+├ patient
+
+MakeReference(“PERSON”,%PID%,”Patient”)
+
+│ ├ coding
+
+AllergyIntolerance Code
+
+│ ├ coding
+
+LabProd
+
+│  │ └ code
+
+%NDCLABPROD%
+
+│ ├ coding
+
+GPI
+
+│  │ └ code
+
+%GPI%
+
+│ ├ coding
+
+DDID
+
+│  │ └ code
+
+%DDID%
+
+│ ├ coding
+
+KDC
+
+│  │ └ code
+
+%KDC%
+
+│ ├ coding
+
+SNOMED
+
+│  │ └ code
+
+%SNOMED%
+
+│ ├ coding
+
+RXNORM
+
+MakeRxnormCodingList(%RXNORM%,”http://www.nlm.nih.gov/research/umls/rxnorm”,null)
+
+│ └ text
+
+%NAME%
+
+├ status
+
+IsActiveOrMapCode(%STOPDATE%,”active”,%STOPREASON%,”ALLERGYSTATUS”)
+
+├ criticality
+
+MapCode(%ISCRITICAL%,”ALLERGYCRIT")
+
+└ category
+
+MapCode(%ALLCLASS%,"ALLERGYCLASS")
+
+└ manifestation
+
+MakeConcept(%REACTIONCODE%,"http://snomed.info/sct", %DESCRIPTION%)
+
+Import Source:
+One source we will be pulling from is Centricity. We can pull data directly from their database or through what is exposed in the FHIR API.XI
+The database mapping would look primarily at the ALLERGY table but also references other tables like USR
+i. The ALLERGY table:
+CREATE TABLE dbo.ALLERGY(
+PID numeric(19, 0) NOT NULL,
+XID numeric(19, 0) NOT NULL,
+AID numeric(19, 0) NOT NULL,
+CHANGE numeric(19, 0) NULL,
+SDID numeric(19, 0) NULL,
+USRID numeric(19, 0) NULL,
+NAME varchar(60) NULL,
+RASH varchar(1) NULL,
+SHOCK varchar(1) NULL,
+RESP varchar(1) NULL,
+GI varchar(1) NULL,
+HEME varchar(1) NULL,
+OTHER varchar(1) NULL,
+DESCRIPTION varchar(256) NULL,
+ONSETDATE datetime NULL,
+STOPDATE datetime NULL,
+STOPREASON varchar(1) NULL,
+KIND varchar(8) NULL,
+SEVERITY varchar(8) NULL,
+NDCLABPROD varchar(9) NULL,
+NDCPACKAGE varchar(2) NULL,
+GPI varchar(14) NULL,
+PUBUSER numeric(19, 0) NULL,
+PUBTIME numeric(19, 0) CONSTRAINT [DF__ALLERGY__PUBTIME__0425A276] DEFAULT ((0)) NOT NULL,
+ANNOTATE varchar(256) NULL,
+USERSORT numeric(19, 0) NULL,
+USERINDENT numeric(19, 0) NULL,
+PENDUSERSORT numeric(19, 0) NULL,
+PENDUSERINDENT numeric(19, 0) NULL,
+DDID numeric(19, 0) NULL,
+KDC numeric(19, 0) NULL,
+APROXONSETDATE varchar(16) NULL,
+DB_CREATE_DATE datetime CONSTRAINT [DF__ALLERGY__DB_CREA__0519C6AF] DEFAULT (getdate()) NULL,
+DB_UPDATED_DATE datetime CONSTRAINT [DF__ALLERGY__DB_UPDA__060DEAE8] DEFAULT (getdate()) NULL,
+ISCRITICAL varchar(1) NULL,
+ALLCLASS varchar(1) NULL,
+SNOMED numeric(19, 0) NULL,
+DTS_EXPORT_DATE datetime CONSTRAINT [DF__ALLERGY__DTS_EXPORT_DATE] DEFAULT getdate() NULL,
+EXTALLERGYID numeric(19, 0) NULL,
+AllergyGroupID numeric(19, 0) NULL,
+CONSTRAINT CKC_PID_ALLERGY CHECK (([PID]>(0))),
+CONSTRAINT ALLERGY_NO_ZERO_SDIDS CHECK (([SDID]>(1))),
+CONSTRAINT PK_ALLERGY PRIMARY KEY CLUSTERED (PID, XID, AID)
+WITH FILLFACTOR = 80,
+CONSTRAINT Add_Unique_AID UNIQUE (AID),
+CONSTRAINT [ALLERGY-SDID-DOCUMENT] FOREIGN KEY (SDID)
+REFERENCES dbo.DOCUMENT(SDID),
+CONSTRAINT [ALLERGY-PID-PatientProfile] FOREIGN KEY (PID)
+REFERENCES dbo.PatientProfile(PID),
+CONSTRAINT [ALLERGY-PUBUSER-USR] FOREIGN KEY (PUBUSER)
+REFERENCES dbo.USR(PVID),
+CONSTRAINT [ALLERGY-USRID-USR] FOREIGN KEY (USRID)
+REFERENCES dbo.USR(PVID)
+)
+go
+
+That is the output spec as an example of what we are working on.
+
+Please let me know next steps, tools, what is needed.
+
+
+first step is to show a tool, that maps literally 2-5 attributes between sources and demonstrates the reference mapping JSON/XML. Then, expand to a more realistic use case like Allergy to verify test process.
+
+Make sense? END CLIENT MESSAGE //

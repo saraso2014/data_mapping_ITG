@@ -1,0 +1,113 @@
+AllergyIntolerance
+
+AllergyIntolerance-Profile
+
+FHIR_ALLERGYVIEW
+
+├ id
+
+MakeId(“ALLERGY”,%ALLERGYGROUPID%)
+
+├ extension
+
+encounter
+
+├ extension
+
+approxonset
+
+├ extension
+
+enddate
+
+├ identifier
+
+External Allergy Identifier
+
+MakeIdentifier(“U”,getSiteSystem(“AllergyId”),%EXTALLERGYID%)
+
+├ onset
+
+%ONSETDATE%
+
+├ recordedDate
+
+%DB_CREATE_DATE%
+
+├ recorder
+
+MakeReference(“USR”,%USRID%,”Practitioner”)
+
+├ patient
+
+MakeReference(“PERSON”,%PID%,”Patient”)
+
+│ ├ coding
+
+AllergyIntolerance Code
+
+│ ├ coding
+
+LabProd
+
+│  │ └ code
+
+%NDCLABPROD%
+
+│ ├ coding
+
+GPI
+
+│  │ └ code
+
+%GPI%
+
+│ ├ coding
+
+DDID
+
+│  │ └ code
+
+%DDID%
+
+│ ├ coding
+
+KDC
+
+│  │ └ code
+
+%KDC%
+
+│ ├ coding
+
+SNOMED
+
+│  │ └ code
+
+%SNOMED%
+
+│ ├ coding
+
+RXNORM
+
+MakeRxnormCodingList(%RXNORM%,”http://www.nlm.nih.gov/research/umls/rxnorm”,null)
+
+│ └ text
+
+%NAME%
+
+├ status
+
+IsActiveOrMapCode(%STOPDATE%,”active”,%STOPREASON%,”ALLERGYSTATUS”)
+
+├ criticality
+
+MapCode(%ISCRITICAL%,”ALLERGYCRIT")
+
+└ category
+
+MapCode(%ALLCLASS%,"ALLERGYCLASS")
+
+└ manifestation
+
+MakeConcept(%REACTIONCODE%,"http://snomed.info/sct", %DESCRIPTION%)
