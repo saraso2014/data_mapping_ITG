@@ -1,0 +1,68 @@
+CREATE TABLE `import_allergy` (
+	`identifier` INT(20) NOT NULL,
+	PRIMARY KEY (`identifier`)
+);
+
+CREATE TABLE `normal_allergy` (
+	`identifier` INT(20) NOT NULL,
+	`clinicalStatus` varchar(500),
+	`verificationStatus` varchar(500),
+	`type` varchar(500),
+	`category` varchar(500),
+	`criticality` varchar(500),
+	`code` varchar(500),
+	`patient` varchar(500),
+	`encounter` varchar(500),
+	`onsetDateTime` varchar(500),
+	`onsetAge` varchar(500),
+	`onsetPeriod` varchar(500),
+	`onsetRange` varchar(500),
+	`onsetString` varchar(500),
+	`recordedDate` varchar(500),
+	`recorder` varchar(500),
+	`asserter` varchar(500),
+	`lastOccurrence` varchar(500),
+	`note` varchar(500),
+	`reaction` varchar(500),
+	PRIMARY KEY (`identifier`)
+);
+
+CREATE TABLE `export_allergy` (
+	`identifier` INT(500),
+	`onset` DATE,
+	`recordedDate` DATE,
+	`recorder` varchar(500),
+	`patient` INT(500),
+	`reporter` varchar(500),
+	`substance` varchar(500),
+	`status` INT(500),
+	`criticality` INT(500),
+	`type` INT(500),
+	`category` INT(500),
+	`lastOccurence` DATE(500),
+	`note` varchar(500),
+	`reaction` varchar(500),
+	`substance` INT(500),
+	`certainty` INT(500),
+	`manifestation` INT(500),
+	`description` varchar(500),
+	`onset` DATE,
+	`severity` INT(500),
+	`exposureRoute` INT(500),
+	`note` varchar(500)
+);
+
+ALTER TABLE `import_allergy` ADD CONSTRAINT `import_allergy_fk0` FOREIGN KEY (`identifier`) REFERENCES `normal_allergy`(`identifier`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk0` FOREIGN KEY (`identifier`) REFERENCES `export_allergy`(`identifier`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk1` FOREIGN KEY (`clinicalStatus`) REFERENCES `export_allergy`(`status`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk2` FOREIGN KEY (`type`) REFERENCES `export_allergy`(`type`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk3` FOREIGN KEY (`criticality`) REFERENCES `export_allergy`(`criticality`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk4` FOREIGN KEY (`patient`) REFERENCES `export_allergy`(`patient`);
+
+ALTER TABLE `normal_allergy` ADD CONSTRAINT `normal_allergy_fk5` FOREIGN KEY (`recorder`) REFERENCES `export_allergy`(`recorder`);
+
