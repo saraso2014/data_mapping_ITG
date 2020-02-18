@@ -1,0 +1,1 @@
+{"criticality": {"normal_allergy_fk1-(criticality)": ":export_allergy:criticality"}}
